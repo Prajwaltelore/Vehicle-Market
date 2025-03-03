@@ -1,0 +1,6 @@
+# GeoLocation Database
+
+https://github.com/dr5hn/countries-states-cities-database
+
+# OAuth
+https://medium.com/@flavtech/google-oauth2-authentication-with-nestjs-explained-ab585c53edec

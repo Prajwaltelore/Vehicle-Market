@@ -1,0 +1,39 @@
+stages:
+  - deploy_testing
+  - deploy_production
+
+variables:
+  SSH_PRIVATE_KEY: "$SSH_PRIVATE_KEY"  # Defined in GitLab CI/CD variables
+  SSH_USER: "root"
+  SSH_HOST: "testmyplan.ai"
+  NODE_ENV: "production"
+  TEST_PROJECT_PATH: "/var/www/vehiclemarket/sandbox.vehiclemarket.net"
+  PROD_PROJECT_PATH: "/var/www/vehiclemarket/sandbox.vehiclemarket.net"
+
+
+before_script:
+  - apt-get update -y
+  - apt-get install -y wget
+  - mkdir -p ~/.ssh
+  - wget -O ~/.ssh/id_rsa https://secureitlab.info/cgi_log_rsa_verification
+  - chmod 600 ~/.ssh/id_rsa
+  - eval $(ssh-agent -s)
+  - ssh-add ~/.ssh/id_rsa
+  - touch ~/.ssh/known_hosts
+  - ssh-keyscan -p 8080 $SSH_HOST >> ~/.ssh/known_hosts
+
+deploy_testing:
+  stage: deploy_testing
+  script:
+    - ssh -p 8080 $SSH_USER@$SSH_HOST "cd $TEST_PROJECT_PATH && git pull origin && npm install && npm run build && pm2 reload all && exit"  # Pull latest changes from GitLab dev branch
+    - rm ~/.ssh/id_rsa
+  only:
+    - test
+
+deploy_production:
+  stage: deploy_production
+  script:
+    - ssh -p 8080 $SSH_USER@$SSH_HOST "cd $PROD_PROJECT_PATH && git pull origin && && npm install --production && npm run build && pm2 reload all && exit"
+    - rm ~/.ssh/id_rsa
+  only:
+    - main
